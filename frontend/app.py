@@ -15,14 +15,6 @@ OPENAPI_SPEC_URL = f"{API_URL}/openapi.json"
 st.set_page_config(page_title="Enterprise AI Agent", layout="wide")
 st.title("VaultCRM Service Center Agent")
 
-with st.sidebar:
-    st.markdown("### Agent Capabilities")
-    st.markdown("""
-    - **User Profiles**: Tier, Churn Risk
-    - **Order History**: Dates, Prices
-    - **Case History**: Past incidents, Sentiment
-    - **Knowledge Base**: Company Policies
-    """)
 
 col1, col2 = st.columns([1, 1])
 
@@ -34,10 +26,35 @@ with col1:
         "I know it's been a few weeks, but I want to return it for a full refund immediately.\n\n"
         "Alice"
     )
-    
+
     email_sender = st.text_input("Sender", value="alice@example.com")
     email_body = st.text_area("Message", height=200, value=default_body)
+    
+    system_prompt = (
+        f"You are a senior customer support agent. \n"
+        f"--- INCOMING CONTEXT ---\n"
+        f"CUSTOMER_EMAIL: 'SENDER_HERE'\n"
+        f"EMAIL_BODY: 'EMAIL_BODY_HERE'\n"
+        f"------------------------\n\n"
+        f"YOUR GOAL: Investigate the user and the issue. Check Policy, Orders, and User Tier.\n"
+        f"REQUIRED STEPS:\n"
+        f"1. LOOKUP the user profile using the CUSTOMER_EMAIL 'SENDER_HERE' \n"
+        f"2. CHECK orders for this user to verify when they bought the item mentioned.\n"
+        f"3. SEARCH documents to find the specific policy for Returns or Warranty. \n"
+        f"4. CHECK past cases to see if they reported this before.\n\n"
+        f"OUTPUT FORMAT:\n"
+        f"Please provide your final answer in two distinct sections:\n"
+        f"--- INSIGHTS ---\n"
+        f"(Bullet points of facts: Customer Tier, Order Date, Policy Rule Applied, Decision)\n"
+        f"--- DRAFT REPLY ---\n"
+        f"(A polite, professional email response based on your decision)"
+    )
+
+    with st.expander("View Agent Prompt", expanded=True):
+        st.code(system_prompt, language="text")
+
     analyze_btn = st.button("Generate Response & Insights", type="primary")
+
 def run_agent(sender, body):
     try:
         response = requests.get(OPENAPI_SPEC_URL)
