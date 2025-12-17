@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - API_BASE_URL=http://backend:8000
+    networks:
+      - agent_network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - agent_network
+
+networks:
+  agent_network:
+    driver: bridge
