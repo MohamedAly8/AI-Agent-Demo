@@ -1,0 +1,300 @@
+openapi: 3.1.0
+info:
+  title: VaultCRM API
+  description: '
+
+    ## Overview
+
+    This API provides access to customer data, including:
+
+    * **Profiles**: User tiers, risk scores, and contact info.
+
+    * **Commerce**: Order history and purchase details.
+
+    * **Support**: Past case history and sentiment analysis.
+
+    * **Knowledge**: Internal policy documents for agent support.
+
+    '
+  version: 2.0.0
+servers:
+- url: http://backend:8000
+paths:
+  /users:
+    get:
+      tags:
+      - Users
+      summary: Find User
+      description: Look up a single user by their email address.
+      operationId: get_user_by_email
+      parameters:
+      - description: The email address associated with the account
+        required: true
+        schema:
+          type: string
+          title: Email
+          description: The email address associated with the account
+        example: alice@example.com
+        name: email
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{user_id}/orders:
+    get:
+      tags:
+      - Orders
+      summary: Get Order History
+      description: Retrieve all past orders for a specific user ID.
+      operationId: get_user_orders
+      parameters:
+      - description: The internal user ID (e.g., u_101)
+        required: true
+        schema:
+          type: string
+          title: User Id
+          description: The internal user ID (e.g., u_101)
+        example: u_101
+        name: user_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Order'
+                type: array
+                title: Response Get User Orders
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{user_id}/cases:
+    get:
+      tags:
+      - Support
+      summary: Get Support Cases
+      description: Retrieve history of support tickets and incidents.
+      operationId: get_user_cases
+      parameters:
+      - description: The internal user ID
+        required: true
+        schema:
+          type: string
+          title: User Id
+          description: The internal user ID
+        example: u_101
+        name: user_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Case'
+                type: array
+                title: Response Get User Cases
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /documents:
+    get:
+      tags:
+      - Knowledge Base
+      summary: Search Knowledge Base
+      description: Search internal policies by keyword (e.g., 'warranty', 'return').
+      operationId: search_documents
+      parameters:
+      - description: Keyword to search in policy topics and content
+        required: true
+        schema:
+          type: string
+          title: Q
+          description: Keyword to search in policy topics and content
+        example: warranty
+        name: q
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/DocSearchResult'
+                type: array
+                title: Response Search Documents
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Case:
+      properties:
+        case_id:
+          type: string
+          title: Case Id
+          example: c_205
+        date:
+          type: string
+          title: Date
+          example: '2023-11-01'
+        subject:
+          type: string
+          title: Subject
+          description: Brief summary of the issue
+          example: Monitor flickering
+        resolution:
+          type: string
+          title: Resolution
+          description: Action taken by support
+          example: Troubleshooting guide sent
+        sentiment:
+          type: string
+          title: Sentiment
+          description: AI-analyzed sentiment of the interaction
+          example: Negative
+      type: object
+      required:
+      - case_id
+      - date
+      - subject
+      - resolution
+      - sentiment
+      title: Case
+    DocSearchResult:
+      properties:
+        topic:
+          type: string
+          title: Topic
+          description: Policy topic key
+          example: warranty
+        content:
+          type: string
+          title: Content
+          description: Full text of the policy
+          example: Electronics have a 1-year manufacturer warranty...
+      type: object
+      required:
+      - topic
+      - content
+      title: DocSearchResult
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Order:
+      properties:
+        order_id:
+          type: string
+          title: Order Id
+          example: o_888
+        item:
+          type: string
+          title: Item
+          example: Gaming Monitor 4K
+        date:
+          type: string
+          title: Date
+          description: ISO 8601 date string
+          example: '2023-10-20'
+        price:
+          type: number
+          title: Price
+          example: 600.0
+        status:
+          type: string
+          title: Status
+          description: Order status (Processing, Delivered, Returned)
+          example: Delivered
+      type: object
+      required:
+      - order_id
+      - item
+      - date
+      - price
+      - status
+      title: Order
+    UserProfile:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Unique internal user ID
+          example: u_101
+        name:
+          type: string
+          title: Name
+          description: Customer's full name
+          example: Alice Smith
+        tier:
+          type: string
+          title: Tier
+          description: Loyalty tier (Silver, Gold, Platinum)
+          example: Platinum
+        churn_risk:
+          type: string
+          title: Churn Risk
+          description: Predicted risk of leaving (Low, Medium, High)
+          example: Medium
+        lifetime_value:
+          type: number
+          title: Lifetime Value
+          description: Total revenue from customer
+          example: 15400.0
+      type: object
+      required:
+      - id
+      - name
+      - tier
+      - churn_risk
+      - lifetime_value
+      title: UserProfile
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
