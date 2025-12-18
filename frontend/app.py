@@ -105,7 +105,7 @@ def run_agent(query_text, log_container):
 with col2:
     st.subheader("Agent Analysis")
     
-    with st.container(height=900, border=True):
+    with st.container(height=1000, border=True):
         
         if analyze_btn:            
             with st.status("🔍 Agent is investigating...", expanded=True) as status_box:
